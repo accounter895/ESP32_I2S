@@ -10,4 +10,6 @@ void wifi_setup() {
         Serial.print('.');
         delay(1000);
     }
+    Serial.print("WiFi connected, IP address: ");
+    Serial.println(WiFi.localIP());
 }
