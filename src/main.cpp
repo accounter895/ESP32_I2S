@@ -104,13 +104,6 @@ void loop() {
 }
 
 void player() {
-  // WiFi.mode(WIFI_STA);
-  // wifiMulti.addAP(ssid.c_str(), password.c_str());
-  // wifiMulti.run();
-  // if(WiFi.status() != WL_CONNECTED){
-  //     WiFi.disconnect(true);
-  //     wifiMulti.run();
-  // }
   const char *host = url.c_str();
   audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
   audio.setVolume(12);        // 0...21
