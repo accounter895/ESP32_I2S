@@ -1,127 +1,121 @@
-#include <Audio.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
-#include <ArduinoJson.h>
+#include <UrlEncode.h>
 #include "Arduino.h"
-//1. Replace with your network credentials
-const char* ssid = "Redmi Note 12 Turbo";
-const char* password = "12345678";      // Change this to your WiFi password
-String voice_id = "female-tianmei-jingpin";  //青年大学生音色：male-qn-daxuesheng;甜美女性音色：female-tianmei;男性主持人：presenter_male;女性主持人：presenter_female
-// 2. Replace with your OpenAI API key
-const char* apiKey = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJHcm91cE5hbWUiOiLph4_lrZDkvY0iLCJVc2VyTmFtZSI6IumHj-WtkOS9jSIsIkFjY291bnQiOiIiLCJTdWJqZWN0SUQiOiIxODkzODYxMDI1MDc0MTIzMTEyIiwiUGhvbmUiOiIxMzA2ODgyNDgxNyIsIkdyb3VwSUQiOiIxODkzODYxMDI1MDY1NzM0NTA0IiwiUGFnZU5hbWUiOiIiLCJNYWlsIjoiIiwiQ3JlYXRlVGltZSI6IjIwMjUtMDItMjUgMTA6MTA6NTQiLCJUb2tlblR5cGUiOjEsImlzcyI6Im1pbmltYXgifQ.aQKisxDl9i01vf-PB1f73j2tMSraOtv8IhA13jUKqr-go9xLda_XFTdSHSp-w1CB_m2_zKA2rcuK4gOPyijuLBFXjsdHEpKLXwsfKCU7O4b1R6IOpPDe1f3EV8IgQuuOtPuId_rejQ3ArUuGjuKc1vttu8zzbCgx3aDrorlE8oK_9h6DgqVKU_SVV8ESWciLx-tZQ0u0LeX1C58f4B4ZeUsbX-Mn2LXug-k0A_6rhEm20aOy561OBcZ6dnO1UYnWF1IYz--ol-WY1Ibx4E4MtROnq2FToxASH9vmJqKKHH0B4bo_Ht-8nKDmBslK2_LAPDIsIQkcWR40ixG738OTag";
-const char* group_id = "1893861025065734504";
-const char* url = "https://api.minimax.chat/v1/t2a_pro?GroupId=1893861025065734504";
-char myCharPointer;
-//扬声器引脚
-#define I2S_DOUT 13         // DIN connection
-#define I2S_BCLK 2          // Bit clock
-#define I2S_LRC  15         // Left Right Clock
+#include "WiFiMulti.h"
+#include "Audio.h"
+
+// 1、修改MAX98357喇叭接口
+#define I2S_DOUT    13
+#define I2S_BCLK    2
+#define I2S_LRC     15
 
 Audio audio;
-String answerv;
-String getvAnswer(void) {
-  HTTPClient http1;
-  http1.setTimeout(10000);
-  http1.begin(url);
-  http1.addHeader("Content-Type", "application/json");
-  String token_key = String("Bearer ") + apiKey;
-  http1.addHeader("Authorization", token_key);
+WiFiMulti wifiMulti;
+// 2、修改WiFi密码
+const char *ssid = "Redmi Note 12 Turbo";
+const char *password = "12345678";  // Change this to your WiFi password
+// 3、修改百度语音助手的用户信息
+const char *API_KEY = "UjvYp1JLIO8yEqAutOVJT5WR";
+const char *SECRET_KEY = "anMdGCLferXzIIeAUS8HtImqbCWpUQAw";
+// 4、修改播放文本内容
+String encodedText = "你好，我是量子位";
 
-  // 创建一个StaticJsonDocument对象，足够大以存储JSON数据
-  StaticJsonDocument<200> doc;
+const int PER = 4;
+const int SPD = 5;
+const int PIT = 5;
+const int VOL = 5;
+const int AUE = 6;
 
-  // 填充数据
-  doc["text"] = "我是智能助手，你好呀";
-  doc["model"] = "speech-01";
-  doc["audio_sample_rate"] = 32000;
-  doc["bitrate"] = 128000;
-  doc["voice_id"] = voice_id;
+const char *TTS_URL = "https://tsn.baidu.com/text2audio";
+String url = TTS_URL;
 
-  // 创建一个String对象来存储序列化后的JSON字符串
-  String jsonString;
-
-  // 序列化JSON到String对象
-  serializeJson(doc, jsonString);
-  int httpResponseCode1 = http1.POST(jsonString);
-
-  if (httpResponseCode1 != 200) {
-    Serial.println("HTTP Request Failed");
-    http1.end();
-
-    return "<error>";
-  }
-
-  String reason = http1.getString();
-  Serial.println("Received response:");
-  Serial.println(reason);
-  http1.end();
-  DynamicJsonDocument jsonDoc1(1024);
-  deserializeJson(jsonDoc1, reason);
-  String outputText = jsonDoc1["audio_file"];
-  return outputText;
-}
-
-void set_voice() {
-  answerv = getvAnswer();
-  Serial.print(answerv);
-  char myCharPointer[answerv.length() + 1];  // 分配足够的空间来存储字符串
-  strcpy(myCharPointer, answerv.c_str());    // 复制字符串到 myCharPointer
-  audio.connecttohost(myCharPointer);        //  128k mp3
-}
-
+void player();
+void tts_get();
 
 void setup() {
-  // Initialize Serial
   Serial.begin(115200);
-  // Connect to Wi-Fi network
-  WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
-  Serial.print("Connecting to WiFi ..");
   while (WiFi.status() != WL_CONNECTED) {
-    Serial.print('.');
     delay(1000);
+    Serial.println("Connecting to WiFi...");
   }
-  Serial.println(WiFi.localIP());
 
-
-
-  // print the SSID of the network you're attached to:
-  Serial.print("SSID: ");
-  Serial.println(WiFi.SSID());
-
-  // print your WiFi shield's IP address:
-  IPAddress ip = WiFi.localIP();
-  Serial.print("IP Address: ");
-  Serial.println(ip);
-  audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
-  audio.setVolume(20);  // 0...21
-  // audio.connecttohost("https://minimax-algeng-chat-tts.oss-cn-wulanchabu.aliyuncs.com/audio%2Ftts-mp3-20240406123922-amZgimLG.mp3?Expires=1712493562&OSSAccessKeyId=LTAI5tGLnRTkBjLuYPjNcKQ8&Signature=omJ5fmpPvXMoR1nk9D8UbJqR3L4%3D"); //  128k mp3
+  Serial.println("Connected to WiFi");
+  encodedText = urlEncode(urlEncode(encodedText));
+  tts_get();
+  player();
 }
+void tts_get() {
+  const char *headerKeys[] = { "Content-Type", "Content-Length" };
+  // 5、修改百度语音助手的token
+  url += "?tok=24.dcb0788463590edacd07841f35d2bb5f.2592000.1743050163.282335-117723335";
+  url += "&tex=" + encodedText;
+  url += "&per=" + String(PER);
+  url += "&spd=" + String(SPD);
+  url += "&pit=" + String(PIT);
+  url += "&vol=" + String(VOL);
+  url += "&aue=" + String(AUE);
+  url += "&cuid=esp32s3";
+  url += "&lan=zh";
+  url += "&ctp=1";
 
-void loop() {
+  HTTPClient http;
 
-  audio.loop();
-  while (Serial.available() > 0) {
-    char voice = Serial.read();
-    // Serial.println(voice);
-    switch (voice) {
-      case '1':
-        voice_id = "male-qn-daxuesheng";
-        break;
-      case '2':
-        voice_id = "female-tianmei";
-        break;
-      case '3':
-        voice_id = "presenter_male";
-        break;
-      case '4':
-        voice_id = "presenter_female";
-        break;
+  Serial.print("URL: ");
+  Serial.println(url);
+
+  http.begin(url);
+  http.collectHeaders(headerKeys, 2);
+  int httpResponseCode = http.GET();
+  if (httpResponseCode > 0) {
+    if (httpResponseCode == HTTP_CODE_OK) {
+      Serial.print("Content-Type = ");
+      Serial.println(http.header("Content-Type"));
+      String contentType = http.header("Content-Type");
+      if (contentType.startsWith("audio")) {
+        Serial.println("合成成功，返回的是音频文件");
+        // 处理音频文件，保存到SD卡或者播放
+      } else if (contentType.equals("application/json")) {
+        Serial.println("合成出现错误,返回的是JSON文本");
+        // 处理错误信息，根据需要进行相应的处理
+      } else {
+        Serial.println("未知的Content-Type");
+        // 可以添加相应的处理逻辑
+      }
+    } else {
+      Serial.println("Failed to receive audio file");
     }
-    Serial.println(voice_id);
-    set_voice();
+  } else {
+    Serial.print("Error code: ");
+    Serial.println(httpResponseCode);
   }
-  
+  http.end();
 }
+void loop() {
+  audio.loop();
+  if (Serial.available()) {  // put streamURL in serial monitor
+    audio.stopSong();
+    String r = Serial.readString();
+    r.trim();
+    if (r.length() > 5) audio.connecttohost(r.c_str());
+    log_i("free heap=%i", ESP.getFreeHeap());
+  }
+}
+
+void player() {
+  // WiFi.mode(WIFI_STA);
+  // wifiMulti.addAP(ssid.c_str(), password.c_str());
+  // wifiMulti.run();
+  // if(WiFi.status() != WL_CONNECTED){
+  //     WiFi.disconnect(true);
+  //     wifiMulti.run();
+  // }
+  const char *host = url.c_str();
+  audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
+  audio.setVolume(12);        // 0...21
+  audio.connecttohost(host);  //  128k mp3
+}
+
 
 
