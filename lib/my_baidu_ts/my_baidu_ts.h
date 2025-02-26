@@ -7,5 +7,6 @@
 #include <cJSON.h>
 #include <UrlEncode.h>
 #include "my_common.h"
+#include "my_i2s.h"
 
 #endif

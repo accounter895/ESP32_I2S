@@ -7,8 +7,8 @@ const int data_json_len = ADC_DATA_LEN * 2 * 1.4;
 // 1、修改百度语言技术的用户信息：https://console.bce.baidu.com/ai/?fromai=1#/ai/speech/app/list
 const int STT_DEV_PID = 1537; //选填，输入法模型 1737-英语 1537-普通话(近场识别模型) 1936-普通话远程识别 1837-四川话 
 const char *STT_TTS_CUID = "CoPY70iMA468o2r4PVLWmlLCruuYQd6G"; //用户唯一标识，用来区分用户，计算UV值。建议填写能区分用户的机器 MAC 地址或 IMEI 码，长度为60字符以内。
-const char *STT_TTS_CLIENT_ID = "sOKyRkOGpc76TYCNvGcd2F1i"; //API Key
-const char *STT_TTS_CLIENT_SECRET = "CoPY70iMA468o2r4PVLWmlLCruuYQd6G"; //Secret Key
+const char *STT_TTS_CLIENT_ID = "5yZRwHlE02QqFIrJoWo0hyuU"; //API Key
+const char *STT_TTS_CLIENT_SECRET = "ihvjYMiFb3pjMwh8TL0ju1TFYPakJtTE"; //Secret Key
  
 String stt_tts_token;
 String stt_tts_gainToken() {
@@ -74,24 +74,37 @@ String getTextFromResponse(String response)
   return output;
 }
  
-//待优化，合成成功，返回的Content-Type以“audio”开头, 
+//待优化，合成成功，返回的Content-Type以“audio”开头,    **修改过的代码**
 //合成出现错误，则会返回json文本，具体header信息为：Content-Type: application/json
-int getInfoFromTtsResponse(String response, LLM_MSG_RSP_T *rsp)
-{
+int getInfoFromTtsResponse(String response, LLM_MSG_RSP_T *rsp) {
   // Parse JSON response
   DynamicJsonDocument jsonDoc(1024);
-  deserializeJson(jsonDoc, response);
-  rsp->err_msg = (String)jsonDoc["err_msg"];
-  //rsp->err_msg = tmp1.c_str();
-  rsp->err_no = jsonDoc["err_no"];;
-  //Serial.println(rsp->err_msg);
-  //Serial.println(rsp->err_no);
+  DeserializationError error = deserializeJson(jsonDoc, response);
+
+  if (error) {
+    Serial.println("Failed to parse JSON response");
+    rsp->err_msg = "Failed to parse JSON response";
+    rsp->err_no = -1; // 使用一个特定的错误码表示解析失败
+    return -1;
+  }
+
+  if (!jsonDoc.containsKey("err_msg") || !jsonDoc.containsKey("err_no")) {
+    Serial.println("JSON response missing 'err_msg' or 'err_no'");
+    rsp->err_msg = "JSON response missing 'err_msg' or 'err_no'";
+    rsp->err_no = -2; // 使用一个特定的错误码表示缺少必要的键
+    return -2;
+  }
+
+  rsp->err_msg = jsonDoc["err_msg"].as<String>();
+  rsp->err_no = jsonDoc["err_no"].as<int>();
+
+  // Serial.println(rsp->err_msg);
+  // Serial.println(rsp->err_no);
+
   return rsp->err_no;
-}
- 
- 
+} 
+
 HTTPClient http_client_stt;
- 
 String sendToSTT_test(uint16_t *data)
 {
   char *data_json = (char *)malloc(data_json_len*sizeof(char));
