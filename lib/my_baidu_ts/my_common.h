@@ -33,7 +33,7 @@
 #define LLM_PLAY_AUDIO_FLAG           BIT(7) //音频播放状态,置位1--播放中
 #define LLM_FIRST_RSP_FLAG            BIT(8) //大模型响应标记,第一个响应后置位，即哪个模型响应快使用哪个做TTS
  
-int g_current_state = 0;
+//int g_current_state = 0;
  
 typedef struct LLM_MSG_RSP
 {

@@ -16,9 +16,9 @@
 #define INMP441_SD       13         
 
 // 修改MAX98357喇叭接口
-#define MAX98357_DIN     13
-#define MAX98357_BCLK    2
-#define MAX98357_LRC     15
+#define MAX98357_DIN     9
+#define MAX98357_BCLK    46
+#define MAX98357_LRC     8
 
 const i2s_port_t I2S_PORT_INMP441 = I2S_NUM_0;        // I2S外设INMP441端口号为0
 const i2s_port_t I2S_PORT_MAX98357A = I2S_NUM_1;      // I2S外设MAX98357A端口号为1

@@ -11,4 +11,4 @@
 #define WIFI_SSID       "Redmi Note 12 Turbo"  
 #define WIFI_PASSWORD   "12345678"
 
-void wifi_setup();
+void WiFi_Setup();

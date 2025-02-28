@@ -6,9 +6,9 @@
 #include "Audio.h"
 
 // 1、修改MAX98357喇叭接口
-#define I2S_DOUT    13
-#define I2S_BCLK    2
-#define I2S_LRC     15
+#define I2S_DOUT    9
+#define I2S_BCLK    46
+#define I2S_LRC     8
 
 Audio audio;
 WiFiMulti wifiMulti;
@@ -47,6 +47,7 @@ void setup() {
   player();
 }
 void tts_get() {
+  url = TTS_URL;
   const char *headerKeys[] = { "Content-Type", "Content-Length" };
   // 5、修改百度语音助手的token
   url += "?tok=24.dcb0788463590edacd07841f35d2bb5f.2592000.1743050163.282335-117723335";
@@ -96,19 +97,24 @@ void loop() {
   audio.loop();
   if (Serial.available()) {  // put streamURL in serial monitor
     audio.stopSong();
-    String r = Serial.readString();
+    String r = Serial.readString();   // 最多为120个字符
     r.trim();
-    if (r.length() > 5) audio.connecttohost(r.c_str());
-    log_i("free heap=%i", ESP.getFreeHeap());
+    if (r.length() > 5) 
+    {
+      encodedText = r;
+    }
+    tts_get();
+    audio.connecttohost(url.c_str());
   }
+    log_i("free heap=%i", ESP.getFreeHeap());
 }
+
 
 void player() {
   const char *host = url.c_str();
   audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
-  audio.setVolume(12);        // 0...21
+  audio.setVolume(3);        // 0...21
   audio.connecttohost(host);  //  128k mp3
 }
-
 
 

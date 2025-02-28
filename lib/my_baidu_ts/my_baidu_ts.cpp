@@ -3,14 +3,34 @@
 #define TXT_DATA_LEN 1024 //STT txt len
 #define ADC_DATA_LEN 1024*16 //read data len
 const int data_json_len = ADC_DATA_LEN * 2 * 1.4;
- 
+
+const int PER = 4;
+const int SPD = 5;
+const int PIT = 5;
+const int VOL = 5;
+const int AUE = 6;
+
+const char *TTS_URL = "https://tsn.baidu.com/text2audio";
+String url = TTS_URL;
+Audio audio;
+String encodedText = "你好，我是量子位";
+
+int g_current_state = 0;
 // 1、修改百度语言技术的用户信息：https://console.bce.baidu.com/ai/?fromai=1#/ai/speech/app/list
 const int STT_DEV_PID = 1537; //选填，输入法模型 1737-英语 1537-普通话(近场识别模型) 1936-普通话远程识别 1837-四川话 
-const char *STT_TTS_CUID = "CoPY70iMA468o2r4PVLWmlLCruuYQd6G"; //用户唯一标识，用来区分用户，计算UV值。建议填写能区分用户的机器 MAC 地址或 IMEI 码，长度为60字符以内。
+const char *STT_TTS_CUID = "esp32s3"; //用户唯一标识，用来区分用户，计算UV值。建议填写能区分用户的机器 MAC 地址或 IMEI 码，长度为60字符以内。
 const char *STT_TTS_CLIENT_ID = "5yZRwHlE02QqFIrJoWo0hyuU"; //API Key
 const char *STT_TTS_CLIENT_SECRET = "ihvjYMiFb3pjMwh8TL0ju1TFYPakJtTE"; //Secret Key
  
 String stt_tts_token;
+/**
+ * @brief Function for gain token from Baidu STT&TTS.
+ *
+ * @param[in] void.
+ * 
+ * @return (String)token.
+ * 
+ **/
 String stt_tts_gainToken() {
   HTTPClient stt_http;
   String token;
@@ -32,12 +52,29 @@ String stt_tts_gainToken() {
   return token;
 }
  
-void stt_tts_setup()
+/**
+ * @brief Function for Baidu STT&TTS setup.
+ *
+ * @param[in] arg : Pointer to the event sent by other function call.
+ * 
+ * @return void.
+ * 
+ **/
+String stt_tts_setup()
 {
   stt_tts_token = stt_tts_gainToken();
   //Serial.println(stt_tts_token.c_str());
+  return stt_tts_token;
 }
- 
+
+/**
+ * @brief Function for JSON assemble.
+ *
+ * @param[in] arg : Pointer to the event sent by other function call.
+ * 
+ * @return void.
+ * 
+ **/
 void stt_assembleJson(uint16_t *data, char *data_json)
 {
   if (stt_tts_token == "")
@@ -61,7 +98,15 @@ void stt_assembleJson(uint16_t *data, char *data_json)
   //Serial.println(data_json);
   return;
 }
- 
+
+/**
+ * @brief Function for parse JSON response and get text.
+ *
+ * @param[in] response : The JSON response form STT.
+ * 
+ * @return (String)results form STT.
+ * 
+ **/
 String getTextFromResponse(String response)
 {
   // Parse JSON response
@@ -73,8 +118,17 @@ String getTextFromResponse(String response)
   //Serial.println(output);
   return output;
 }
- 
-//待优化，合成成功，返回的Content-Type以“audio”开头,    **修改过的代码**
+
+/**
+ * @brief Function for 处理tts相应信息.
+ *
+ * @param[in] response : The JSON response form TTS.
+ * @param[out] rsp : tts是否成功的标志.
+ * 
+ * @return (int) 0:成功，-1:解析失败，-2:缺少必要的键.
+ * 
+ **/
+//待优化，合成成功，返回的Content-Type以“audio”开头,    **已优化**
 //合成出现错误，则会返回json文本，具体header信息为：Content-Type: application/json
 int getInfoFromTtsResponse(String response, LLM_MSG_RSP_T *rsp) {
   // Parse JSON response
@@ -114,6 +168,15 @@ String sendToSTT_test(uint16_t *data)
   free(data_json);
 }
  
+/**
+ * @brief Function for 把inmp4411的音频数据转换成json格式并发送到TTS服务器,获得文本.
+ *
+ * @param[in] *data : 音频数据.
+ * 
+ * 
+ * @return (String)语音输入之后stt返回的文本数据.
+ * 
+ **/
 String sendToSTT(uint16_t *data)
 {
   HTTPClient http_client_stt;
@@ -140,13 +203,22 @@ String sendToSTT(uint16_t *data)
     return String("响应失败请重新获取!");
   }
 }
- 
-String sendToTTS(String InputText, int *len) {
+
+/**
+ * @brief Function for 把文本用tts转换为语音.
+ *
+ * @param[in] InputText : 文本数据.
+ * @param[in] len : 文本数据的长度.
+ * 
+ * @return (String)tts是否成功的字符串.
+ * 
+ **/
+/*String sendToTTS(String InputText, int *len) {
  
   InputText = urlEncode(InputText);//tex字段2次urlencode
   InputText = urlEncode(InputText);//百度为了更好地兼容，支持1次及2次urlencode， 其中2次urlencode可以覆盖全部的特殊字符。因而推荐传递tex 参数时做2次urlencode编码。
   HTTPClient http;
-  char* tts_url = "https://tsn.baidu.com/text2audio"; // 百度语音合成的API URL
+  char* tts_url = "http://tsn.baidu.com/text2audio"; // 百度语音合成的API URL
   http.begin(tts_url); // 初始化HTTP请求  
   http.addHeader("Content-Type", "application/x-www-form-urlencoded"); // 根据API要求添加HTTP头  application/x-www-form-urlencoded
  
@@ -154,7 +226,7 @@ String sendToTTS(String InputText, int *len) {
   {
     stt_tts_setup();
   }
-  String payload = String("tex=")+InputText.c_str()+String("&tok=")+stt_tts_token.c_str()+String("&cuid=")+STT_TTS_CUID+String("&ctp=1&lan=zh&spd=5&pit=1&vol=1&per=5&aue=4");  
+  String payload = String("tex=")+InputText.c_str()+String("&tok=24.4645a3816cf83f36fcb132fcc75b7ebc.2592000.1743305804.282335-117723335")+String("&cuid=")+STT_TTS_CUID+String("&ctp=1&lan=zh&spd=5&pit=5&vol=5&per=4&aue=6");  
   //Serial.println(payload);  
   
   String outputText;
@@ -181,7 +253,67 @@ String sendToTTS(String InputText, int *len) {
   http.end(); // 结束HTTP请求  
   return outputText;
 }
- 
+*/
+
+void tts_get() {
+  const char *headerKeys[] = { "Content-Type", "Content-Length" };
+  // 5、修改百度语音助手的token
+  url += "?tok=24.dcb0788463590edacd07841f35d2bb5f.2592000.1743050163.282335-117723335";
+  url += "&tex=" + encodedText;
+  url += "&per=" + String(PER);
+  url += "&spd=" + String(SPD);
+  url += "&pit=" + String(PIT);
+  url += "&vol=" + String(VOL);
+  url += "&aue=" + String(AUE);
+  url += "&cuid=esp32s3";
+  url += "&lan=zh";
+  url += "&ctp=1";
+
+  HTTPClient http;
+
+  Serial.print("URL: ");
+  Serial.println(url);
+
+  http.begin(url);
+  http.collectHeaders(headerKeys, 2);
+  int httpResponseCode = http.GET();
+  if (httpResponseCode > 0) {
+    if (httpResponseCode == HTTP_CODE_OK) {
+      Serial.print("Content-Type = ");
+      Serial.println(http.header("Content-Type"));
+      String contentType = http.header("Content-Type");
+      if (contentType.startsWith("audio")) {
+        Serial.println("合成成功，返回的是音频文件");
+        // 处理音频文件，保存到SD卡或者播放
+      } else if (contentType.equals("application/json")) {
+        Serial.println("合成出现错误,返回的是JSON文本");
+        // 处理错误信息，根据需要进行相应的处理
+      } else {
+        Serial.println("未知的Content-Type");
+        // 可以添加相应的处理逻辑
+      }
+    } else {
+      Serial.println("Failed to receive audio file");
+    }
+  } else {
+    Serial.print("Error code: ");
+    Serial.println(httpResponseCode);
+  }
+  http.end();
+  const char *host = url.c_str();
+  audio.setPinout(MAX98357_BCLK, MAX98357_LRC, MAX98357_DIN);
+  audio.setVolume(12);        // 0...21
+  audio.connecttohost(host);  //  128k mp3
+  audio.loop();
+}
+/**
+ * @brief Function for 播放语音.
+ *
+ * @param[in] input : 文本数据.
+ * 
+ * @return void.
+ * 
+ **/
 void audio_play_by_text(String input)
 {
     g_current_state |= LLM_PLAY_AUDIO_FLAG;

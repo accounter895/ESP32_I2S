@@ -3,7 +3,7 @@
 const char* ssid = WIFI_SSID;               // 若用手机热点，需要调整为2.4G频段
 const char* password = WIFI_PASSWORD;
 
-void wifi_setup() {
+void WiFi_Setup() {
     WiFi.mode(WIFI_STA);
     WiFi.begin(ssid, password);
     while(WiFi.status() != WL_CONNECTED) {
