@@ -7,7 +7,7 @@ void My_I2S::my_inmp441_init(){
         .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,       // 采样精度16位
         .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,        // 只接收左声道数据
         .communication_format = I2S_COMM_FORMAT_STAND_I2S,  // I2S标准格式
-        .intr_alloc_flags = 0,                              // Interrupt level 1
+        .intr_alloc_flags = ESP_INTR_FLAG_EDGE,             // Interrupt level 1
         .dma_buf_count = 8,                                 // 量化电平为8位(分辨率)
         .dma_buf_len = bufferlen,                           // samples per buffer
         .use_apll = false
@@ -40,8 +40,8 @@ void My_I2S::my_max98357a_init(){
         .sample_rate = SAMPLE_RATE,                         // 采样频率44KHz
         .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,       // 采样精度16位
         .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,        // 只发送左声道数据
-        .communication_format = I2S_COMM_FORMAT_STAND_I2S,  // I2S标准格式
-        .intr_alloc_flags = 0,                              // Interrupt level 1
+        .communication_format = I2S_COMM_FORMAT_STAND_MSB,  // I2S标准格式
+        .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,           // Interrupt level 1
         .dma_buf_count = 8,                                 // 量化电平为8位(分辨率)
         .dma_buf_len = bufferlen,                           // samples per buffer
         .use_apll = false

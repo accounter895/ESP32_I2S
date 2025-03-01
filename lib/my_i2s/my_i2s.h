@@ -7,8 +7,8 @@
 
 #endif
 
-#define SAMPLE_RATE (44100)         // 采样率为44Khz
-#define bufferlen 64                // 缓冲区长度
+#define SAMPLE_RATE (16000)         // 采样率为16Khz
+#define bufferlen 128                // 缓冲区长度
 
 // 修改INMP441麦克风接口
 #define INMP441_WS       15         

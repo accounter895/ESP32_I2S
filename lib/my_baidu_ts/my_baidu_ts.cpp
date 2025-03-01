@@ -1,7 +1,5 @@
 #include "my_baidu_ts.h"
 
-#define TXT_DATA_LEN 1024 //STT txt len
-#define ADC_DATA_LEN 1024*16 //read data len
 const int data_json_len = ADC_DATA_LEN * 2 * 1.4;
 
 const int PER = 4;
@@ -12,8 +10,6 @@ const int AUE = 6;
 
 const char *TTS_URL = "https://tsn.baidu.com/text2audio";
 String url = TTS_URL;
-Audio audio;
-String encodedText = "你好，我是量子位";
 
 int g_current_state = 0;
 // 1、修改百度语言技术的用户信息：https://console.bce.baidu.com/ai/?fromai=1#/ai/speech/app/list
@@ -204,15 +200,6 @@ String sendToSTT(uint16_t *data)
   }
 }
 
-/**
- * @brief Function for 把文本用tts转换为语音.
- *
- * @param[in] InputText : 文本数据.
- * @param[in] len : 文本数据的长度.
- * 
- * @return (String)tts是否成功的字符串.
- * 
- **/
 /*String sendToTTS(String InputText, int *len) {
  
   InputText = urlEncode(InputText);//tex字段2次urlencode
@@ -255,7 +242,16 @@ String sendToSTT(uint16_t *data)
 }
 */
 
-void tts_get() {
+/**
+ * @brief Function for 把文本用tts转换为语音.
+ *
+ * @param[in] void.
+ * 
+ * @return (String)tts是否成功的字符串.
+ * 
+ **/
+String tts_get(String encodedText) {
+  url = TTS_URL;            //重置url
   const char *headerKeys[] = { "Content-Type", "Content-Length" };
   // 5、修改百度语音助手的token
   url += "?tok=24.dcb0788463590edacd07841f35d2bb5f.2592000.1743050163.282335-117723335";
@@ -300,12 +296,9 @@ void tts_get() {
     Serial.println(httpResponseCode);
   }
   http.end();
-  const char *host = url.c_str();
-  audio.setPinout(MAX98357_BCLK, MAX98357_LRC, MAX98357_DIN);
-  audio.setVolume(12);        // 0...21
-  audio.connecttohost(host);  //  128k mp3
-  audio.loop();
+  return url;
 }
+
 /**
  * @brief Function for 播放语音.
  *
