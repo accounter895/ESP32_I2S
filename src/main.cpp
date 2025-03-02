@@ -42,13 +42,13 @@ void loop() {
   if (Serial.available()) { 
     //  1. 若串口有内容输入，先停止语音播报
     audio.stopSong();
-    String r = Serial.readString();   // 最多为120个字符
-    r.trim();
-    if (r.length() > 5) 
-    {
-      new_encodedText = r;
-    }
+    GPTinputText = Serial.readStringUntil('\r');//  \r表示结束符为回车符
+    Serial.println("\n Input:" + GPTinputText);
+    GPTanswer = My_deepseek.getGPTAnswer(GPTinputText);
+    new_encodedText = urlEncode(GPTanswer);
     String url = tts_get(new_encodedText);
+    Serial.println("Answer: " + GPTanswer);
+    Serial.println("Enter a prompt:");
     audio.connecttohost(url.c_str());
   }
   log_i("free heap=%i", ESP.getFreeHeap());
@@ -68,3 +68,4 @@ void player(String url) {
   audio.setVolume(3);        // 0...21
   audio.connecttohost(host);  //  128k mp3
 }
+
