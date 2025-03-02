@@ -1,5 +1,7 @@
 #include "my_i2s.h"
 
+int16_t s_buffer[bufferlen];                 // 采样数据缓冲区
+
 void My_I2S::my_inmp441_init(){
     const i2s_config_t inmp441_i2s_config = {
         .mode = i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX), // Receive, not transfer
@@ -7,7 +9,7 @@ void My_I2S::my_inmp441_init(){
         .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,       // 采样精度16位
         .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,        // 只接收左声道数据
         .communication_format = I2S_COMM_FORMAT_STAND_I2S,  // I2S标准格式
-        .intr_alloc_flags = ESP_INTR_FLAG_EDGE,             // Interrupt level 1
+        .intr_alloc_flags = 0,                              // Interrupt level 1
         .dma_buf_count = 8,                                 // 量化电平为8位(分辨率)
         .dma_buf_len = bufferlen,                           // samples per buffer
         .use_apll = false
@@ -40,8 +42,8 @@ void My_I2S::my_max98357a_init(){
         .sample_rate = SAMPLE_RATE,                         // 采样频率44KHz
         .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,       // 采样精度16位
         .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,        // 只发送左声道数据
-        .communication_format = I2S_COMM_FORMAT_STAND_MSB,  // I2S标准格式
-        .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,           // Interrupt level 1
+        .communication_format = I2S_COMM_FORMAT_STAND_I2S,  // I2S标准格式
+        .intr_alloc_flags = 0,                              // Interrupt level 1
         .dma_buf_count = 8,                                 // 量化电平为8位(分辨率)
         .dma_buf_len = bufferlen,                           // samples per buffer
         .use_apll = false
@@ -64,7 +66,7 @@ void My_I2S::my_max98357a_init(){
       Serial.printf("Failed setting pin: %d\n", err);
       while (true);
     }
-    Serial.println("INMP441 driver installed.");
+    Serial.println("MAX98357 driver installed.");
 }
 
 void My_I2S::inmp441_max98357_loop() {
@@ -75,4 +77,22 @@ void My_I2S::inmp441_max98357_loop() {
     //Serial.println(bytes_read);
     size_t bytes_write;
     result = i2s_write(I2S_NUM_1, &data, sizeof(data), &bytes_write, portMAX_DELAY);
+}
+
+void My_I2S::Read() {
+  size_t bytes_read = 0;                       // 读取到的字节数
+  esp_err_t inm_results = i2s_read(I2S_PORT_INMP441, &s_buffer, bufferlen, &bytes_read, portMAX_DELAY);
+  if (inm_results == ESP_OK)
+  {
+    int samples_read = bytes_read / 8;
+    if (samples_read > 0) {
+      float mean = 0;
+      for (int i = 0; i < samples_read; ++i) {
+        mean += (s_buffer[i]);
+      }
+      mean /= samples_read;
+      Serial.printf("%f\n", mean);
+    }
+  }
+  delay(100);
 }

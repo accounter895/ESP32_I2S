@@ -14,7 +14,7 @@ String url = TTS_URL;
 int g_current_state = 0;
 // 1、修改百度语言技术的用户信息：https://console.bce.baidu.com/ai/?fromai=1#/ai/speech/app/list
 const int STT_DEV_PID = 1537; //选填，输入法模型 1737-英语 1537-普通话(近场识别模型) 1936-普通话远程识别 1837-四川话 
-const char *STT_TTS_CUID = "esp32s3"; //用户唯一标识，用来区分用户，计算UV值。建议填写能区分用户的机器 MAC 地址或 IMEI 码，长度为60字符以内。
+const char *STT_TTS_CUID = "2zY0nzwfwhEmZeueWu8FVpBIhCL0ugHA"; //用户唯一标识，用来区分用户，计算UV值。建议填写能区分用户的机器 MAC 地址或 IMEI 码，长度为60字符以内。
 const char *STT_TTS_CLIENT_ID = "5yZRwHlE02QqFIrJoWo0hyuU"; //API Key
 const char *STT_TTS_CLIENT_SECRET = "ihvjYMiFb3pjMwh8TL0ju1TFYPakJtTE"; //Secret Key
  
@@ -28,6 +28,7 @@ String stt_tts_token;
  * 
  **/
 String stt_tts_gainToken() {
+  Serial.println("stt_tts_gainToken run!!");
   HTTPClient stt_http;
   String token;
   String url = String("https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=") + STT_TTS_CLIENT_ID + "&client_secret=" + STT_TTS_CLIENT_SECRET;
@@ -58,6 +59,7 @@ String stt_tts_gainToken() {
  **/
 String stt_tts_setup()
 {
+  Serial.println("stt_tts_setup run!!");
   stt_tts_token = stt_tts_gainToken();
   //Serial.println(stt_tts_token.c_str());
   return stt_tts_token;
@@ -77,7 +79,7 @@ void stt_assembleJson(uint16_t *data, char *data_json)
   {
     stt_tts_setup();
   }
- 
+  Serial.println("assembleJson run!!");
   strcat(data_json, "{");
   strcat(data_json, "\"format\":\"pcm\",");
   strcat(data_json, "\"rate\":16000,");
@@ -175,6 +177,7 @@ String sendToSTT_test(uint16_t *data)
  **/
 String sendToSTT(uint16_t *data)
 {
+  Serial.println("sendToSTT run!!");
   HTTPClient http_client_stt;
   http_client_stt.begin("http://vop.baidu.com/server_api");//短语音识别请求地址: 标准版http://vop.baidu.com/server_api, 极速版https://vop.baidu.com/pro_api
   http_client_stt.addHeader("Content-Type", "application/json");

@@ -14,7 +14,7 @@
 #include "Audio.h"
 
 #define TXT_DATA_LEN 1024 //STT txt len
-#define ADC_DATA_LEN 1024*16 //read data len
+#define ADC_DATA_LEN 1024*16*2 //read data len
 
 String stt_tts_setup();
 String sendToSTT(uint16_t *data);
