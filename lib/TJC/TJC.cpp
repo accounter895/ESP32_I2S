@@ -1,17 +1,27 @@
 #include "TJC.h"
 
+DHT_Unified dht(DHTPIN, DHTTYPE);
+MQ135 mq135_sensor(PIN_MQ135);
+BH1750 lightMeter;
+
+float temperature = 21.0, humidity = 25.0;
 char str[100];      //定义一个字符串数组，用于存放传感器数据要发送的字符串
 
-void TJC_Sensor(float n0_val, float n1_val, float n4_val, String t5_txt) {
-    sprintf(str, "n0.val=%d\xff\xff\xff", (uint8_t)n0_val);
-    TJC.print(str);
-    sprintf(str, "n1.val=%d\xff\xff\xff", (uint8_t)n1_val);
-    TJC.print(str);
-    sprintf(str, "n4.val=%d\xff\xff\xff", (uint16_t)n4_val);
-    TJC.print(str);
-    sprintf(str, "t5.txt=%s\xff\xff\xff", (String)t5_txt);
-    TJC.print(str);
-    delay(50);
+void TJC_Sensor(){
+  sensors_event_t event;  
+  dht.temperature().getEvent(&event);
+  sprintf(str, "n0.val=%d\xff\xff\xff", (uint8_t)event.temperature);
+  TJC.print(str);
+  dht.humidity().getEvent(&event);
+  sprintf(str, "n1.val=%d\xff\xff\xff", (uint8_t)event.relative_humidity);
+  TJC.print(str);
+  float correctedPPM = mq135_sensor.getCorrectedPPM(temperature, humidity);
+  sprintf(str, "n4.val=%d\xff\xff\xff", (uint16_t)correctedPPM);
+  TJC.print(str);
+  String t5_txt = Soil_judge();
+  sprintf(str, "t5.txt=%s\xff\xff\xff", (String)t5_txt);
+  TJC.print(str);
+  delay(50);
 
     //用sprintf来格式化字符串，触发b0的弹起事件,直接把结束符整合在字符串中
     //sprintf(str, "click b0,0\xff\xff\xff");

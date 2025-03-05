@@ -2,6 +2,7 @@
 #define TJC_H
 
 #include <Arduino.h>
+#include "my_Sensor.h"
 
 #define TJC Serial1
 #define TJC_TX 17
@@ -10,7 +11,10 @@
 
 #define LED_Pin 21
 
-void TJC_Sensor(float n0_val, float n1_val, float n4_val, String t5_txt);
+extern DHT_Unified dht;
+extern BH1750 lightMeter;
+
+void TJC_Sensor();
 void TJC_Light();
 
 #endif
