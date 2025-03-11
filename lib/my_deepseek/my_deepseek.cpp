@@ -13,7 +13,7 @@ String My_GPT::getGPTAnswer(String inputText) {
     http.addHeader("Authorization", token_key);
     String payload = String("{\"model\":\"ep-20250216202252-wprvx\",")
                     + "\"messages\":[{\"role\":\"system\","
-                    + "\"content\":\"你是个农业专家,接下来的农业问题你必须用中文回答,且字数限制在40字以内\"},"
+                    + "\"content\":\"你是个农业专家,接下来的农业问题你必须用中文回答,且字数限制在50字以内\"},"
                     + "{\"role\":\"user\","
                     + "\"content\":\"" + inputText + "\"}],"
                     + "\"temperature\": 0.3}";

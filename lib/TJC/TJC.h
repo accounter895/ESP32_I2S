@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include "my_Sensor.h"
+#include "my_Servo.h"
 
 #define TJC Serial1
 #define TJC_TX 17

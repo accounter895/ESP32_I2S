@@ -6,6 +6,7 @@ BH1750 lightMeter;
 
 float temperature = 21.0, humidity = 25.0;
 char str[100];      //定义一个字符串数组，用于存放传感器数据要发送的字符串
+uint8_t Servo_Angle[3] = {0};
 
 void TJC_Sensor(){
   sensors_event_t event;  
@@ -49,6 +50,12 @@ void TJC_Sensor(){
   //例子2：上位机代码  printh 55 02 00 00 ff ff ff  含义：h0.val=0
   //例子3：上位机代码  printh 55 03 64 00 ff ff ff  含义：h1.val=100
   //例子4：上位机代码  printh 55 03 00 00 ff ff ff  含义：h1.val=0
+
+  //当参数是04时,下发的是机械臂舵机的角度信息
+  //帧头     参数1    参数2   参数3   参数4   参数5     帧尾
+  //0x55     04      00      00      00      00       0xffffff
+  //例子1：上位机代码  printh 55 04 00 00 ff ff ff  含义：
+
 void TJC_Light(){
     unsigned char ubuffer[FRAME_LENGTH];
     //从串口缓冲读取1个字节但不删除
@@ -77,7 +84,7 @@ void TJC_Light(){
         }else if(ubuffer[1] == 0x02)
         {
           //下发的是滑动条h0.val的信息
-          sprintf(str, "msg.txt=\"h0.val is %d\"\xff\xff\xff", ubuffer[2]);
+          sprintf(str, "msg.txt=\"Servo_A's angle is %d\"\xff\xff\xff", ubuffer[2]);
           TJC.print(str);
         }else if(ubuffer[1] == 0x03)
         {
