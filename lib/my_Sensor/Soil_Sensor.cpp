@@ -1,6 +1,6 @@
 #include "Soil_Sensor.h"
 
-float Soil_wet = 0;
+uint16_t Soil_wet = 0;
 uint16_t Soil_int = (AirValue - WaterValue) / 3;
 
 String Soil_judge(void){

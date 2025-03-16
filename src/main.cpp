@@ -29,6 +29,8 @@ void setup() {
   Wire.begin();
   WiFi_Setup();
   pinMode(48, INPUT);
+  pinMode(LED_Pin, OUTPUT);
+  My_Servo_Init();
   
   // dht11初始化
   dht.begin();
@@ -64,10 +66,6 @@ void loop() {
   if (millis() >= nowtime + 1000) {
     nowtime = millis(); //获取当前已经运行的时间
     TJC_Sensor();
-    float lux = lightMeter.readLightLevel();
-    Serial.print("Light: ");
-    Serial.print(lux);
-    Serial.println(" lx");
   }
 
   // 若串口屏输入则控制LED

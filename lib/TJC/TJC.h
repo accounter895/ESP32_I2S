@@ -8,7 +8,9 @@
 #define TJC Serial1
 #define TJC_TX 17
 #define TJC_RX 18
-#define FRAME_LENGTH 7   // 串口数据帧长度
+#define FRAME_LENGTH 9   // 串口数据帧长度
+#define Servo_Step 25
+#define Init_Angle 90
 
 #define LED_Pin 21
 

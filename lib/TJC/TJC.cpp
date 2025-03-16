@@ -6,7 +6,7 @@ BH1750 lightMeter;
 
 float temperature = 21.0, humidity = 25.0;
 char str[100];      //定义一个字符串数组，用于存放传感器数据要发送的字符串
-uint8_t Servo_Angle[3] = {0};
+uint8_t Servo_Angle[4] = {90, 90, 90, 90};
 
 void TJC_Sensor(){
   sensors_event_t event;  
@@ -16,11 +16,14 @@ void TJC_Sensor(){
   dht.humidity().getEvent(&event);
   sprintf(str, "n1.val=%d\xff\xff\xff", (uint8_t)event.relative_humidity);
   TJC.print(str);
+  float lux = lightMeter.readLightLevel();
+  sprintf(str, "n3.val=%d\xff\xff\xff", (uint16_t)lux);
+  TJC.print(str);
   float correctedPPM = mq135_sensor.getCorrectedPPM(temperature, humidity);
   sprintf(str, "n4.val=%d\xff\xff\xff", (uint16_t)correctedPPM);
   TJC.print(str);
   String t5_txt = Soil_judge();
-  sprintf(str, "t5.txt=%s\xff\xff\xff", (String)t5_txt);
+  sprintf(str, "t5.txt=\"%s\"\xff\xff\xff", t5_txt);
   TJC.print(str);
   delay(50);
 
@@ -44,17 +47,15 @@ void TJC_Sensor(){
   //例子4：上位机代码  printh 55 01 04 00 ff ff ff  含义：4号led关闭
 
   //当参数是02或03时
-  //帧头     参数1    参数2   参数3       帧尾
-  //0x55     02/03   滑动值    00    0xffffff
-  //例子1：上位机代码  printh 55 02 64 00 ff ff ff  含义：h0.val=100
+  //帧头     参数1    参数2      参数3       帧尾
+  //0x55     02/03   水果品种    00    0xffffff
+  //例子1：上位机代码  printh 55 02 01 00 00 00 ff ff ff  含义：要驱动苹果坐标
   //例子2：上位机代码  printh 55 02 00 00 ff ff ff  含义：h0.val=0
-  //例子3：上位机代码  printh 55 03 64 00 ff ff ff  含义：h1.val=100
-  //例子4：上位机代码  printh 55 03 00 00 ff ff ff  含义：h1.val=0
 
   //当参数是04时,下发的是机械臂舵机的角度信息
   //帧头     参数1    参数2   参数3   参数4   参数5     帧尾
   //0x55     04      00      00      00      00       0xffffff
-  //例子1：上位机代码  printh 55 04 00 00 ff ff ff  含义：
+  //例子1：上位机代码  printh 55 04 00 00 00 00 ff ff ff  含义：舵机角度没有变化
 
 void TJC_Light(){
     unsigned char ubuffer[FRAME_LENGTH];
@@ -70,7 +71,7 @@ void TJC_Light(){
         Serial.print(" ");
       }
       Serial.println("");
-      if (ubuffer[4] == 0xff && ubuffer[5] == 0xff && ubuffer[6] == 0xff) {
+      if (ubuffer[6] == 0xff && ubuffer[7] == 0xff && ubuffer[8] == 0xff) {
         if(ubuffer[1] == 0x01)
         {
           //下发的是LED信息
@@ -83,14 +84,17 @@ void TJC_Light(){
           }
         }else if(ubuffer[1] == 0x02)
         {
-          //下发的是滑动条h0.val的信息
-          sprintf(str, "msg.txt=\"Servo_A's angle is %d\"\xff\xff\xff", ubuffer[2]);
-          TJC.print(str);
-        }else if(ubuffer[1] == 0x03)
+          //下发的是水果信息
+          if(ubuffer[2] == 0x01)  My_Apple_Move();
+        }else if(ubuffer[1] == 0x04)
         {
-          //下发的是滑动条h1.val的信息
-          sprintf(str, "msg.txt=\"h1.val is %d\"\xff\xff\xff", ubuffer[2]);
-          TJC.print(str);
+          if(ubuffer[2] != 0x00)  ubuffer[2] == 0x01 ? Servo_Angle[0] += Servo_Step : Servo_Angle[0] -= Servo_Step;
+          if(ubuffer[3] != 0x00)  ubuffer[3] == 0x01 ? Servo_Angle[1] += Servo_Step : Servo_Angle[1] -= Servo_Step;
+          if(ubuffer[4] != 0x00)  ubuffer[4] == 0x01 ? Servo_Angle[2] += Servo_Step : Servo_Angle[2] -= Servo_Step;
+          if(ubuffer[5] != 0x00)  ubuffer[5] == 0x01 ? Servo_Angle[3] += Servo_Step : Servo_Angle[3] -= Servo_Step;
+          My_Servo_Move(Servo_Angle);
+          Serial.printf("Servo_Angle = %d %d %d %d\n", Servo_Angle[0], Servo_Angle[1], Servo_Angle[2], Servo_Angle[3]);
+          sprintf(str, "msg.txt=\"Servo Angle is %d %d %d %d\"\xff\xff\xff", Servo_Angle[0], Servo_Angle[1], Servo_Angle[2], Servo_Angle[3]);
         }
       }
     } else {
