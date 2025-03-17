@@ -14,10 +14,9 @@
 #define SC_Init_Angle 90
 #define SD_Init_Angle 90
 
-#define Apple_LED 19
-
-void My_Servo_Init();
-void My_Servo_Move(uint8_t angle_A[4]);
+#define Apple_LED   19
+#define Banana_LED  20
+#define Orange_LED  21
 
 typedef struct
 {
@@ -29,6 +28,10 @@ typedef struct
     uint8_t Servo_poses[][4];
 } Model_Pose;
 
+void My_Servo_Init();
+void My_Servo_Move(uint8_t angle_A[4]);
 void My_Apple_Move();
+void My_Banana_Move();
+void My_Orange_Move();
 
 #endif

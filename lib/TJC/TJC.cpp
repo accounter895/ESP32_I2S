@@ -86,6 +86,8 @@ void TJC_Light(){
         {
           //下发的是水果信息
           if(ubuffer[2] == 0x01)  My_Apple_Move();
+          if(ubuffer[2] == 0x02)  My_Banana_Move();
+          if(ubuffer[2] == 0x03)  My_Orange_Move();
         }else if(ubuffer[1] == 0x04)
         {
           if(ubuffer[2] != 0x00)  ubuffer[2] == 0x01 ? Servo_Angle[0] += Servo_Step : Servo_Angle[0] -= Servo_Step;

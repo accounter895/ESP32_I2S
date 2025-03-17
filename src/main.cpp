@@ -103,4 +103,3 @@ void max98357a_player(String url) {
   audio.setVolume(5);        // 0...21
   audio.connecttohost(host);  //  128k mp3
 }
-
