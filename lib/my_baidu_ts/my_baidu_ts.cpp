@@ -15,8 +15,8 @@ int g_current_state = 0;
 // 1、修改百度语言技术的用户信息：https://console.bce.baidu.com/ai/?fromai=1#/ai/speech/app/list
 const int STT_DEV_PID = 1537; //选填，输入法模型 1737-英语 1537-普通话(近场识别模型) 1936-普通话远程识别 1837-四川话 
 const char *STT_TTS_CUID = "2zY0nzwfwhEmZeueWu8FVpBIhCL0ugHA"; //用户唯一标识，用来区分用户，计算UV值。建议填写能区分用户的机器 MAC 地址或 IMEI 码，长度为60字符以内。
-const char *STT_TTS_CLIENT_ID = "5yZRwHlE02QqFIrJoWo0hyuU"; //API Key
-const char *STT_TTS_CLIENT_SECRET = "ihvjYMiFb3pjMwh8TL0ju1TFYPakJtTE"; //Secret Key
+const char *STT_TTS_CLIENT_ID = "UjvYp1JLIO8yEqAutOVJT5WR"; //API Key
+const char *STT_TTS_CLIENT_SECRET = "GNBbK1AmHCDFykH73G2zkIqfdQQUXX8l"; //Secret Key
  
 String stt_tts_token;
 /**
@@ -257,7 +257,7 @@ String tts_get(String encodedText) {
   url = TTS_URL;            //重置url
   const char *headerKeys[] = { "Content-Type", "Content-Length" };
   // 5、修改百度语音助手的token
-  url += "?tok=24.dcb0788463590edacd07841f35d2bb5f.2592000.1743050163.282335-117723335";
+  url += "?tok=24.2cd281e0f89301717bf739531f7557e1.2592000.1744987329.282335-117723335";
   url += "&tex=" + encodedText;
   url += "&per=" + String(PER);
   url += "&spd=" + String(SPD);
